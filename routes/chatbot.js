@@ -5,15 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-// Decode service account key from base64 in Railway
-if (process.env.GOOGLE_CREDENTIALS_BASE64) {
-  const fs = await import('fs/promises');
-  const keyPath = path.join(__dirname, 'service-account.json');
-  await fs.writeFile(keyPath, Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64'));
-  process.env.GOOGLE_APPLICATION_CREDENTIALS = keyPath;
-}
-
+import fs from 'fs/promises';
 
 dotenv.config();
 
@@ -29,6 +21,15 @@ const sessionClient = new dialogflow.SessionsClient({
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
 });
 
+if (process.env.GOOGLE_CREDENTIALS_BASE64) {
+  const keyPath = path.join(__dirname, 'service-account.json');
+  await fs.writeFile(
+    keyPath,
+    Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64')
+  );
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = keyPath;
+}
+
 // POST /api/chatbot
 router.post('/', async (req, res) => {
   const userMessage = req.body.message;
@@ -39,7 +40,6 @@ router.post('/', async (req, res) => {
 
   try {
     const sessionId = uuidv4();
-    console.log("Debug:", { projectId, sessionId });
     const sessionPath = sessionClient.projectAgentSessionPath(projectId, sessionId);
 
     const request = {
