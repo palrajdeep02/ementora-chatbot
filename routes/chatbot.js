@@ -11,24 +11,37 @@ dotenv.config();
 
 const router = express.Router();
 
-// Resolve __dirname for ES modules
+// Resolve __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Project & session setup
+// Set project ID
 const projectId = process.env.DIALOGFLOW_PROJECT_ID;
-const sessionClient = new dialogflow.SessionsClient({
-  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-});
 
-if (process.env.GOOGLE_CREDENTIALS_BASE64) {
-  const keyPath = path.join(__dirname, 'service-account.json');
-  await fs.writeFile(
-    keyPath,
-    Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64')
-  );
-  process.env.GOOGLE_APPLICATION_CREDENTIALS = keyPath;
+let sessionClient; // to be initialized after decoding creds
+
+// Initialize Dialogflow client after decoding base64 credentials
+async function initializeDialogflowClient() {
+  if (process.env.GOOGLE_CREDENTIALS_BASE64) {
+    const keyPath = path.join(__dirname, 'service-account.json');
+
+    // Decode base64 to JSON and write to file
+    const decoded = Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64').toString('utf-8');
+    await fs.writeFile(keyPath, decoded);
+
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = keyPath;
+
+    // Now safely create the session client
+    sessionClient = new dialogflow.SessionsClient({
+      keyFilename: keyPath,
+    });
+  } else {
+    throw new Error("GOOGLE_CREDENTIALS_BASE64 is not defined in environment variables.");
+  }
 }
+
+// Call initialization immediately
+await initializeDialogflowClient();
 
 // POST /api/chatbot
 router.post('/', async (req, res) => {
@@ -57,7 +70,7 @@ router.post('/', async (req, res) => {
 
     let botReply = result.fulfillmentText;
 
-    // If Dialogflow fallback intent is triggered
+    // Fallback to Gemini if Dialogflow didn't understand
     if (result.intent && result.intent.isFallback) {
       console.log('Fallback triggered, using Gemini API...');
       botReply = await getGeminiFallback(userMessage);
@@ -70,11 +83,9 @@ router.post('/', async (req, res) => {
   }
 });
 
-
-// Gemini API fallback logic with corrected 'v1beta' endpoint
+// Gemini fallback
 async function getGeminiFallback(userMessage) {
   const apiKey = process.env.GEMINI_API_KEY;
-  // Using the 'v1beta' endpoint which supports the 1.5-flash model
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
   const payload = {
@@ -102,6 +113,5 @@ async function getGeminiFallback(userMessage) {
     return "Sorry, I couldn't process that right now.";
   }
 }
-
 
 export default router;
