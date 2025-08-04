@@ -1,0 +1,32 @@
+{
+  "name": "emetora-ai-chatbot",
+  "version": "1.0.0",
+  "description": "��#\u0000 \u0000e\u0000m\u0000e\u0000n\u0000t\u0000o\u0000r\u0000a\u0000-\u0000c\u0000h\u0000a\u0000t\u0000b\u0000o\u0000t\u0000\r\u0000 \u0000#\u0000 \u0000E\u0000m\u0000e\u0000n\u0000t\u0000o\u0000r\u0000a\u0000-\u0000A\u0000I\u0000-\u0000C\u0000h\u0000a\u0000t\u0000B\u0000o\u0000t\u0000\r\u0000 \u0000",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@google-cloud/dialogflow": "^7.2.0",
+    "@google-cloud/dialogflow-cx": "^5.3.0",
+    "axios": "^1.11.0",
+    "body-parser": "^2.2.0",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/palrajdeep02/ementora-chatbot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/palrajdeep02/ementora-chatbot/issues"
+  },
+  "homepage": "https://github.com/palrajdeep02/ementora-chatbot#readme"
+}
