@@ -6,6 +6,15 @@ import axios from 'axios';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Decode service account key from base64 in Railway
+if (process.env.GOOGLE_CREDENTIALS_BASE64) {
+  const fs = await import('fs/promises');
+  const keyPath = path.join(__dirname, 'service-account.json');
+  await fs.writeFile(keyPath, Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64'));
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = keyPath;
+}
+
+
 dotenv.config();
 
 const router = express.Router();
@@ -30,6 +39,7 @@ router.post('/', async (req, res) => {
 
   try {
     const sessionId = uuidv4();
+    console.log("Debug:", { projectId, sessionId });
     const sessionPath = sessionClient.projectAgentSessionPath(projectId, sessionId);
 
     const request = {
