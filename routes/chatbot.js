@@ -3,16 +3,30 @@ import dialogflow from '@google-cloud/dialogflow';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 dotenv.config();
 const router = express.Router();
 
-const projectId = process.env.DIALOGFLOW_PROJECT_ID;
-const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+// Step 1: Extract and write JSON key to temp file
+const credentialsEnv = process.env.GOOGLE_CREDENTIALS_JSON;
 
-// Initialize Dialogflow client using credentials file path
+if (!credentialsEnv) {
+  throw new Error('GOOGLE_CREDENTIALS_JSON is missing in environment variables');
+}
+
+// Write to a temp file at startup
+const tempKeyPath = path.join(os.tmpdir(), 'service-account.json'); // uses OS temp folder
+const parsedCredentials = JSON.parse(credentialsEnv);
+parsedCredentials.private_key = parsedCredentials.private_key.replace(/\\n/g, '\n');
+fs.writeFileSync(tempKeyPath, JSON.stringify(parsedCredentials));
+
+// Step 2: Use the temp key file with Dialogflow client
+const projectId = parsedCredentials.project_id;
 const sessionClient = new dialogflow.SessionsClient({
-  keyFilename: credentialsPath,
+  keyFilename: tempKeyPath,
 });
 
 router.post('/', async (req, res) => {
